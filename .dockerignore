@@ -1,0 +1,15 @@
+__pycache__
+*.pyc
+.pytest_cache
+.git
+.gitignore
+README.md
+CHALLENGE.md
+AUDIT.md
+DECISIONS.md
+.env
+.vscode
+.idea
+*.egg-info
+dist
+build
