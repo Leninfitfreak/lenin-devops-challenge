@@ -31,7 +31,10 @@ spec:
               protocol: TCP
           env:
             - name: API_TOKEN
-              value: {{ .Values.apiToken | quote }}
+              valueFrom:
+                secretKeyRef:
+                  name: api-token
+                  key: token
           resources:
             requests:
               cpu: {{ .Values.resources.requests.cpu }}

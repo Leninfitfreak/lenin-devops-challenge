@@ -9,9 +9,6 @@ service:
   type: ClusterIP
   port: 80
 
-# API token used by the service. Rotate quarterly.
-apiToken: "sk-skybyte-prod-7f3c9a2b1e8d4a6c"
-
 resources:
   requests:
     cpu: "50m"
