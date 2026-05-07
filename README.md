@@ -38,7 +38,7 @@ IMAGE_TAG=1.0.0 ./setup.sh
 - Terraform creates the `devops-challenge` namespace, memory quota, and `api-token` Secret.
 - Helm deploys the Kubernetes Deployment and Service.
 - Kind is used for local Kubernetes runtime validation and local image loading.
-- Kubernetes runs the app with non-root settings, probes, resource limits, and Prometheus scrape annotations.
+- Kubernetes runs the app with Gunicorn, non-root settings, probes, resource limits, and Prometheus scrape annotations.
 
 ## Runtime Verification
 
@@ -117,6 +117,7 @@ Extended CI checks such as Python linting, kubeconform, Trivy scanning, buildx m
 
 The Helm chart configures:
 
+- Gunicorn serving on port `80`
 - non-root pod and container execution
 - `allowPrivilegeEscalation: false`
 - `readOnlyRootFilesystem: true`
@@ -145,7 +146,7 @@ The Helm chart configures:
 
 ## Operational Limitations
 
-- Flask's built-in server is still used for this challenge and local validation; Gunicorn and explicit SIGTERM draining are deferred.
+- Gunicorn is used as the WSGI runtime, with graceful worker shutdown bounded by the Kubernetes termination grace period.
 - There is no ingress, TLS, DNS, or external load balancer configuration yet.
 - Kubernetes Secret handling is basic and does not use an external secret manager yet.
 - Metrics are exposed, but formal SLOs, alerting, and dashboards are not enforced in this repository.

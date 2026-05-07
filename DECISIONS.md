@@ -76,7 +76,7 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Rationale:** These settings reduce blast radius and make scheduler and kubelet behavior more predictable. They also address the highest-risk Kubernetes defects without redesigning the app.
 
-**Cost / risk accepted:** The app still uses Flask's built-in server. That is acceptable for the current challenge scope and local validation, but it is not the serving model I would choose for production. Gunicorn and explicit SIGTERM draining are deferred because they change application runtime behavior and deserve a separate focused phase.
+**Cost / risk accepted:** The app now uses Gunicorn instead of Flask's built-in server. The configuration uses one worker to keep Prometheus metrics simple and accurate without adding multiprocess metrics handling.
 
 ### Decision: Bind to port 80 with a minimal added capability
 
@@ -170,8 +170,8 @@ This repository is not fully production-ready.
 
 Known limitations:
 
-- Flask's built-in server is still used. It is enough for this challenge's local validation, but production should use Gunicorn or another WSGI process manager.
-- SIGTERM draining is not fully implemented.
+- Gunicorn is configured with a single worker for this service rather than dynamic production tuning.
+- SIGTERM handling relies on Gunicorn's graceful worker shutdown and Kubernetes endpoint removal during termination.
 - There is no ingress, TLS, DNS, or external load balancer configuration.
 - Kubernetes Secret handling is basic and does not use an external secret manager.
 - Terraform state protection is not configured in this repository.
@@ -183,9 +183,9 @@ Known limitations:
 
 ## Consciously Deferred Work
 
-### Gunicorn and graceful shutdown
+### WSGI runtime tuning
 
-Deferred because replacing Flask's built-in server changes application runtime behavior. The current server is sufficient for local Kubernetes validation, but the next step should use a production WSGI process manager, configure worker timeout behavior, and validate SIGTERM handling during rolling updates and pod deletion.
+Deferred beyond the first Gunicorn pass. The current configuration replaces Flask's built-in server and validates rollout behavior, but future work should tune worker count, timeouts, and pod deletion recovery checks against real traffic patterns.
 
 ### Ingress and TLS
 
@@ -218,7 +218,7 @@ Deferred because local Kind validation can use `kind load docker-image`. A produ
 - Add kubeconform validation for rendered Helm manifests.
 - Add Trivy source and image scanning.
 - Add Python linting.
-- Add Gunicorn and validate graceful shutdown.
+- Tune Gunicorn worker settings against realistic traffic.
 - Add a README SLO statement and Prometheus query examples.
 - Mark Terraform secret input as sensitive and document state handling.
 - Publish images to a registry and deploy by digest.
