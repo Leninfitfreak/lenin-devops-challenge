@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-IMAGE_TAG="${IMAGE_TAG:-latest}"
+IMAGE_TAG="${IMAGE_TAG:-$(git rev-parse --short HEAD)}"
 IMAGE="skybyte/app:${IMAGE_TAG}"
 NAMESPACE="${NAMESPACE:-devops-challenge}"
 
@@ -21,6 +21,7 @@ cd ..
 
 echo "==> Installing Helm chart"
 helm upgrade --install skybyte-app helm/skybyte-app \
-  --namespace "$NAMESPACE"
+  --namespace "$NAMESPACE" \
+  --set image.tag="$IMAGE_TAG"
 
 echo "==> Done"

@@ -19,14 +19,16 @@ A small Python service that returns a greeting. Runs in Kubernetes via Helm.
 ```
 
 This script will build the image, apply Terraform, and install the Helm chart.
+By default, the image tag is the current Git short SHA. Set `IMAGE_TAG` to deploy a specific tag.
 
 To verify the deployment:
 
 ```bash
 kubectl -n devops-challenge get pods
+kubectl -n devops-challenge get deployment skybyte-app -o jsonpath='{.spec.template.spec.containers[0].image}'
 kubectl -n devops-challenge port-forward svc/skybyte-app 8080:80
 curl http://localhost:8080/
-# expected: {"message": "Hello, Candidate", "version": "1.0.0"}
+curl http://localhost:8080/metrics
 ```
 
 ## Architecture
