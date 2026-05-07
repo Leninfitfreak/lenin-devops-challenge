@@ -102,6 +102,18 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Cost / risk accepted:** Kubernetes Secrets are not a complete production secret management solution. External secret managers, encryption controls, and stricter RBAC are deferred.
 
+### Decision: Add a small Kyverno policy layer
+
+**Context:** The Deployment already avoids `latest` image tags and runs as non-root. Those standards should be enforced so future chart changes do not silently weaken the runtime posture.
+
+**Options considered:** Add no policy layer, which keeps the repo smaller but relies on manual review. Add many baseline policies, which is broader but harder to validate in this inherited repository. Add two focused Kyverno policies that match the hardening already implemented.
+
+**Chosen:** Add Kyverno policies to disallow `latest` image tags and require non-root execution.
+
+**Rationale:** Kyverno policies are close to Kubernetes YAML and fit this repository better than introducing a larger policy framework. The policies are intentionally narrow and were validated against the Helm-rendered Deployment and a rejection example.
+
+**Cost / risk accepted:** This is not a complete admission baseline. Additional policies for resources, read-only root filesystem, capabilities, and seccomp are deferred.
+
 ## Debugging And Validation Approach
 
 ### Decision: Validate incrementally before expanding tooling
@@ -114,7 +126,7 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Rationale:** This catches the most likely regressions while keeping the workflow readable. It also matches the incremental hardening approach used throughout the repository.
 
-**Cost / risk accepted:** The current CI does not yet include Python linting, kubeconform, Trivy, buildx multi-arch builds, or policy validation. Those are planned next-phase improvements.
+**Cost / risk accepted:** The current CI does not yet include Python linting, kubeconform, Trivy, buildx multi-arch builds, or Kyverno policy validation. Those are planned next-phase improvements.
 
 ### Decision: Keep `setup.sh` simple and linear
 
@@ -163,8 +175,8 @@ Known limitations:
 - There is no ingress, TLS, DNS, or external load balancer configuration.
 - Kubernetes Secret handling is basic and does not use an external secret manager.
 - Terraform state protection is not configured in this repository.
-- CI does not yet run Python linting, kubeconform, Trivy, buildx multi-arch builds, or policy checks.
-- Policy-as-code is not yet implemented.
+- CI does not yet run Python linting, kubeconform, Trivy, buildx multi-arch builds, or Kyverno policy checks.
+- Policy-as-code is intentionally limited to two Kyverno policies.
 - There is no `system-checks.sh` script yet.
 - Metrics are exposed, but there is no formal SLO statement, Prometheus deployment, alerting, dashboarding, or SLO enforcement.
 - Image tags are deterministic, but images are not published to a registry or pinned by digest.
@@ -187,9 +199,9 @@ Deferred because the first goal was to remove hardcoded secrets and use Kubernet
 
 Deferred because the immediate need was application-level request metrics. A formal latency SLO, Prometheus deployment, alert rules, dashboards, log aggregation, and tracing should be added after the basic metrics surface is stable.
 
-### Policy-as-code
+### Expanded policy-as-code
 
-Deferred to the next hardening phase. Policies should enforce non-root execution, resource requests and limits, read-only root filesystem, dropped capabilities, and no `latest` image tags.
+Deferred beyond the first Kyverno pass. The current policies enforce non-root execution and block `latest` tags. Future policies should cover resource requests and limits, read-only root filesystem, dropped capabilities, and seccomp.
 
 ### Extended CI validation
 
@@ -202,7 +214,7 @@ Deferred because local Kind validation can use `kind load docker-image`. A produ
 ## Future Improvements
 
 - Add `system-checks.sh` for repeatable runtime verification.
-- Add Kyverno policies and test rejection output.
+- Expand Kyverno policies and add policy checks to CI.
 - Add kubeconform validation for rendered Helm manifests.
 - Add Trivy source and image scanning.
 - Add Python linting.
