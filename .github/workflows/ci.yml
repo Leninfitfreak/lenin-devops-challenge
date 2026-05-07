@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.9"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r app/requirements.txt
+          pip install pytest
+
+      - name: Run tests
+        run: PYTHONPATH=. pytest app/tests
+
+      - name: Build Docker image
+        run: docker build -t skybyte/app:ci .
+
+      - uses: azure/setup-helm@v4
+
+      - name: Lint Helm chart
+        run: helm lint helm/skybyte-app
+
+      - name: Render Helm chart
+        run: helm template skybyte-app helm/skybyte-app
+
+      - uses: hashicorp/setup-terraform@v3
+
+      - name: Check Terraform formatting
+        working-directory: terraform
+        run: terraform fmt -check
+
+      - name: Initialize Terraform
+        working-directory: terraform
+        run: terraform init -backend=false
+
+      - name: Validate Terraform
+        working-directory: terraform
+        run: terraform validate
