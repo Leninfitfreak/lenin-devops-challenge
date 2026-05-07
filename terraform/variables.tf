@@ -13,4 +13,5 @@ variable "memory_quota" {
 variable "api_token" {
   type        = string
   description = "API token consumed by the app"
+  sensitive   = true
 }

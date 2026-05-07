@@ -79,6 +79,10 @@ The app exposes:
 
 Metrics include request count and request duration with `method`, `path`, and `status` labels. The pod template includes Prometheus scrape annotations for `/metrics` on port `80`.
 
+## Service Level Objective
+
+99% of requests to `/` should complete in under 300 ms over a rolling 7-day window. This would be measured from `http_request_duration_seconds` once Prometheus scraping and alerting are installed; this repository exposes the metric but does not yet enforce the SLO.
+
 ## Admission Policies
 
 Kyverno policies live in `policies/` and enforce the runtime standards already used by the chart:
@@ -152,5 +156,5 @@ The Helm chart configures:
 - Gunicorn is used as the WSGI runtime, with graceful worker shutdown bounded by the Kubernetes termination grace period.
 - There is no ingress, TLS, DNS, or external load balancer configuration yet.
 - Kubernetes Secret handling is basic and does not use an external secret manager yet.
-- Metrics are exposed, but formal SLOs, alerting, and dashboards are not enforced in this repository.
+- Metrics and an SLO statement are present, but alerting and dashboards are not enforced in this repository.
 - Multi-arch image builds, image scanning, and policy checks in CI are planned follow-up work.
