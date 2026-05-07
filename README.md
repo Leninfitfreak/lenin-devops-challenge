@@ -104,14 +104,17 @@ kubectl apply -f policies/
 GitHub Actions runs a single validation job on push and pull request. The workflow currently checks:
 
 - Python dependency installation
+- Python linting
 - pytest
+- Trivy filesystem vulnerability and secret scan
 - Docker image build
 - Helm lint
 - Helm template rendering
+- kubeconform validation for rendered manifests
 - Terraform formatting
 - Terraform validation
 
-Extended CI checks such as Python linting, kubeconform, Trivy scanning, buildx multi-arch builds, and Kyverno policy checks are planned follow-up work.
+Extended CI checks such as buildx multi-arch builds, image scanning, and Kyverno policy checks are planned follow-up work.
 
 ## Runtime Hardening
 
@@ -150,4 +153,4 @@ The Helm chart configures:
 - There is no ingress, TLS, DNS, or external load balancer configuration yet.
 - Kubernetes Secret handling is basic and does not use an external secret manager yet.
 - Metrics are exposed, but formal SLOs, alerting, and dashboards are not enforced in this repository.
-- Advanced CI security scanning and schema validation are planned follow-up work.
+- Multi-arch image builds, image scanning, and policy checks in CI are planned follow-up work.

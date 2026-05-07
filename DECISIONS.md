@@ -122,11 +122,11 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Options considered:** Build a complete enterprise-style CI pipeline immediately, which would cover more cases but increase complexity. Add a minimal validation pipeline first and expand it in later phases.
 
-**Chosen:** Add a single GitHub Actions workflow that installs dependencies, runs tests, builds the image, renders Helm, and validates Terraform.
+**Chosen:** Add a single GitHub Actions workflow that installs dependencies, lints Python, runs tests, scans the repository with Trivy, builds the image, renders Helm, validates manifests with kubeconform, and validates Terraform.
 
-**Rationale:** This catches the most likely regressions while keeping the workflow readable. It also matches the incremental hardening approach used throughout the repository.
+**Rationale:** This catches the most likely regressions while keeping the workflow readable. The added checks cover Python hygiene, rendered Kubernetes schema validation, and high-severity dependency or secret findings without turning the pipeline into a deployment platform.
 
-**Cost / risk accepted:** The current CI does not yet include Python linting, kubeconform, Trivy, buildx multi-arch builds, or Kyverno policy validation. Those are planned next-phase improvements.
+**Cost / risk accepted:** The current CI does not yet include buildx multi-arch builds, image scanning, or Kyverno policy validation. Those are planned next-phase improvements.
 
 ### Decision: Keep `setup.sh` simple and linear
 
@@ -175,7 +175,7 @@ Known limitations:
 - There is no ingress, TLS, DNS, or external load balancer configuration.
 - Kubernetes Secret handling is basic and does not use an external secret manager.
 - Terraform state protection is not configured in this repository.
-- CI does not yet run Python linting, kubeconform, Trivy, buildx multi-arch builds, or Kyverno policy checks.
+- CI does not yet run buildx multi-arch builds, image scanning, or Kyverno policy checks.
 - Policy-as-code is intentionally limited to two Kyverno policies.
 - `system-checks.sh` covers core post-deploy validation, but does not yet test pod deletion and recovery timing.
 - Metrics are exposed, but there is no formal SLO statement, Prometheus deployment, alerting, dashboarding, or SLO enforcement.
@@ -205,7 +205,7 @@ Deferred beyond the first Kyverno pass. The current policies enforce non-root ex
 
 ### Extended CI validation
 
-Deferred to keep the first CI pass small. The next version should add Python linting, kubeconform, Trivy source and image scans, buildx multi-arch builds, and Kyverno policy checks against rendered manifests.
+Deferred beyond the current incremental CI pass. The workflow now includes Python linting, kubeconform, and Trivy filesystem scanning. The next version should add buildx multi-arch builds, image scanning, and Kyverno policy checks against rendered manifests.
 
 ### Image registry and digest pinning
 
@@ -215,9 +215,8 @@ Deferred because local Kind validation can use `kind load docker-image`. A produ
 
 - Extend `system-checks.sh` to delete a pod and verify recovery timing.
 - Expand Kyverno policies and add policy checks to CI.
-- Add kubeconform validation for rendered Helm manifests.
-- Add Trivy source and image scanning.
-- Add Python linting.
+- Add image scanning to CI.
+- Add Kyverno policy checks to CI.
 - Tune Gunicorn worker settings against realistic traffic.
 - Add a README SLO statement and Prometheus query examples.
 - Mark Terraform secret input as sensitive and document state handling.
