@@ -150,7 +150,7 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Rationale:** Runtime validation proves that Docker, Terraform, Helm, Kubernetes probes, Secret injection, Service routing, and metrics work together.
 
-**Cost / risk accepted:** The runtime validation is not yet captured as a reusable `system-checks.sh` script. That is planned work.
+**Cost / risk accepted:** The runtime validation script covers the core post-deploy checks, but it is intentionally not a full test framework. It does not yet delete a pod and verify recovery timing.
 
 ## Deployment Philosophy
 
@@ -177,7 +177,7 @@ Known limitations:
 - Terraform state protection is not configured in this repository.
 - CI does not yet run Python linting, kubeconform, Trivy, buildx multi-arch builds, or Kyverno policy checks.
 - Policy-as-code is intentionally limited to two Kyverno policies.
-- There is no `system-checks.sh` script yet.
+- `system-checks.sh` covers core post-deploy validation, but does not yet test pod deletion and recovery timing.
 - Metrics are exposed, but there is no formal SLO statement, Prometheus deployment, alerting, dashboarding, or SLO enforcement.
 - Image tags are deterministic, but images are not published to a registry or pinned by digest.
 
@@ -213,7 +213,7 @@ Deferred because local Kind validation can use `kind load docker-image`. A produ
 
 ## Future Improvements
 
-- Add `system-checks.sh` for repeatable runtime verification.
+- Extend `system-checks.sh` to delete a pod and verify recovery timing.
 - Expand Kyverno policies and add policy checks to CI.
 - Add kubeconform validation for rendered Helm manifests.
 - Add Trivy source and image scanning.

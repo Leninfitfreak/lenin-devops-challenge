@@ -31,6 +31,14 @@ curl http://localhost:8080/
 curl http://localhost:8080/metrics
 ```
 
+For a repeatable post-deploy check:
+
+```bash
+./system-checks.sh
+```
+
+The script verifies the namespace, deployment rollout, ready pod, service, deployed image tag, pod status, `/healthz`, and `/metrics`. Run it after `./setup.sh` or after a Helm upgrade.
+
 ## Architecture
 
 ```
