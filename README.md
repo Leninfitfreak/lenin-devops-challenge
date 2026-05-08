@@ -33,6 +33,10 @@ By default, the image tag is the current Git short SHA. Set `IMAGE_TAG` to deplo
 IMAGE_TAG=1.0.0 ./setup.sh
 ```
 
+## Demo
+
+Asciinema walkthrough: https://asciinema.org/a/UL2kqQEPYkMWJqdz
+
 ## Deployment Flow
 
 - Docker builds `skybyte/app:<tag>` from the Flask application.
