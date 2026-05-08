@@ -14,7 +14,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/path: /metrics
-        prometheus.io/port: "80"
+        prometheus.io/port: "8080"
         prometheus.io/scrape: "true"
       labels:
         app.kubernetes.io/name: {{ include "skybyte-app.name" . }}
@@ -31,7 +31,7 @@ spec:
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
             - name: http
-              containerPort: 80
+              containerPort: 8080
               protocol: TCP
           env:
             - name: API_TOKEN
@@ -55,8 +55,6 @@ spec:
             capabilities:
               drop:
                 - ALL
-              add:
-                - NET_BIND_SERVICE
             seccompProfile:
               type: RuntimeDefault
           livenessProbe:

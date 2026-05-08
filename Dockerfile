@@ -10,8 +10,8 @@ RUN pip install -r requirements.txt
 COPY app/ /app/
 RUN chown -R appuser:appuser /app
 
-EXPOSE 80
+EXPOSE 8080
 
 USER appuser
 
-CMD ["gunicorn", "--bind", "0.0.0.0:80", "--workers", "1", "--timeout", "30", "--graceful-timeout", "25", "--worker-tmp-dir", "/dev/shm", "--access-logfile", "-", "--error-logfile", "-", "main:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "30", "--graceful-timeout", "25", "--worker-tmp-dir", "/dev/shm", "--access-logfile", "-", "--error-logfile", "-", "main:app"]

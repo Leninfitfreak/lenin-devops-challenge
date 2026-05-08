@@ -78,17 +78,17 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Cost / risk accepted:** The app now uses Gunicorn instead of Flask's built-in server. The configuration uses one worker to keep Prometheus metrics simple and accurate without adding multiprocess metrics handling.
 
-### Decision: Bind to port 80 with a minimal added capability
+### Decision: Run the container on an unprivileged port
 
-**Context:** The app and Service already use port 80, but non-root processes normally cannot bind low ports without permission.
+**Context:** The app originally listened on port 80 inside the container. That required `NET_BIND_SERVICE` for non-root execution and weakened the otherwise strict capability posture.
 
-**Options considered:** Change the app to listen on 8080 and keep the Service on 80, which avoids the capability but changes runtime port assumptions. Keep port 80 and add only `NET_BIND_SERVICE`.
+**Options considered:** Keep port 80 and allow only `NET_BIND_SERVICE`, which preserves the old runtime port but keeps one added capability. Move the container to port 8080 while keeping the Kubernetes Service on port 80, which removes the capability need while preserving Service behavior.
 
-**Chosen:** Keep port 80 and add `NET_BIND_SERVICE` while dropping all other capabilities.
+**Chosen:** Run Gunicorn on container port 8080 and keep the Service exposed on port 80.
 
-**Rationale:** This preserves the existing deployment interface while still using a least-privilege capability set.
+**Rationale:** The Service remains reachable the same way, but the container no longer binds a privileged port. This lets the chart drop all Linux capabilities without adding one back.
 
-**Cost / risk accepted:** A future cleanup could move the app to 8080 and remove `NET_BIND_SERVICE`.
+**Cost / risk accepted:** There is a small internal port migration across Docker, Helm, probes, metrics annotations, and runtime checks. The external Service contract is unchanged.
 
 ### Decision: Use Kubernetes Secret and `secretKeyRef` for the API token
 
@@ -213,12 +213,10 @@ Deferred because local Kind validation can use `kind load docker-image`. A produ
 
 ## Future Improvements
 
-- Extend `system-checks.sh` to delete a pod and verify recovery timing.
 - Expand Kyverno policies and add policy checks to CI.
 - Add image scanning to CI.
-- Add Kyverno policy checks to CI.
 - Tune Gunicorn worker settings against realistic traffic.
-- Add a README SLO statement and Prometheus query examples.
-- Mark Terraform secret input as sensitive and document state handling.
+- Add Prometheus query examples for the documented SLO.
+- Document Terraform state handling for secret values.
 - Publish images to a registry and deploy by digest.
 - Add ingress and TLS when a real environment target exists.

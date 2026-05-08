@@ -39,6 +39,7 @@ IMAGE_TAG=1.0.0 ./setup.sh
 - Helm deploys the Kubernetes Deployment and Service.
 - Kind is used for local Kubernetes runtime validation and local image loading.
 - Kubernetes runs the app with Gunicorn, non-root settings, probes, resource limits, and Prometheus scrape annotations.
+- The container listens on port `8080`, while the Kubernetes Service exposes port `80`.
 
 ## Runtime Verification
 
@@ -77,7 +78,7 @@ The app exposes:
 - `GET /healthz`
 - `GET /metrics`
 
-Metrics include request count and request duration with `method`, `path`, and `status` labels. The pod template includes Prometheus scrape annotations for `/metrics` on port `80`.
+Metrics include request count and request duration with `method`, `path`, and `status` labels. The pod template includes Prometheus scrape annotations for `/metrics` on port `8080`.
 
 ## Service Level Objective
 
@@ -124,11 +125,12 @@ Extended CI checks such as buildx multi-arch builds, image scanning, and Kyverno
 
 The Helm chart configures:
 
-- Gunicorn serving on port `80`
+- Gunicorn serving on container port `8080`
+- Kubernetes Service exposing port `80`
 - non-root pod and container execution
 - `allowPrivilegeEscalation: false`
 - `readOnlyRootFilesystem: true`
-- dropped Linux capabilities with only `NET_BIND_SERVICE` added back
+- dropped Linux capabilities
 - `RuntimeDefault` seccomp profile
 - CPU and memory requests and limits
 - readiness and liveness probes on `/healthz`

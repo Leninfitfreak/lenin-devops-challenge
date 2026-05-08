@@ -38,15 +38,12 @@ test "$UID_VALUE" != "0"
 echo "==> Runtime capabilities"
 CAP_EFF="$(kubectl -n "$NAMESPACE" exec "$POD" -- sh -c "awk '/^CapEff:/ {print \$2}' /proc/self/status")"
 echo "CapEff=$CAP_EFF"
-case "$CAP_EFF" in
-  0000000000000000|0000000000000400) ;;
-  *) exit 1 ;;
-esac
+test "$CAP_EFF" = "0000000000000000"
 
 echo "==> Listening port"
-BOUND_PORT="$(kubectl -n "$NAMESPACE" exec "$POD" -- sh -c "awk '\$2 ~ /:0050$/ && \$4 == \"0A\" {print \$2}' /proc/net/tcp /proc/net/tcp6 2>/dev/null | head -n 1")"
+BOUND_PORT="$(kubectl -n "$NAMESPACE" exec "$POD" -- sh -c "awk '\$2 ~ /:1F90$/ && \$4 == \"0A\" {print \$2}' /proc/net/tcp /proc/net/tcp6 2>/dev/null | head -n 1")"
 test -n "$BOUND_PORT"
-echo "port=80 socket=$BOUND_PORT"
+echo "port=8080 socket=$BOUND_PORT"
 
 echo "==> Starting port-forward"
 kubectl -n "$NAMESPACE" port-forward svc/"$RELEASE" "$LOCAL_PORT":80 >/tmp/skybyte-port-forward.log 2>&1 &
