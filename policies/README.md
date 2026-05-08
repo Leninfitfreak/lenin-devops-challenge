@@ -6,6 +6,7 @@ The policies enforce:
 
 - container images must not use the `latest` tag
 - Pods and Deployments must set `runAsNonRoot: true` at pod and container scope
+- containers must declare CPU and memory requests and limits
 
 These checks exist to prevent regressions in the hardening already applied to the chart. They are intentionally narrow so the policy layer stays readable and easy to validate.
 

@@ -4,15 +4,18 @@ resource "kubernetes_namespace" "this" {
   }
 }
 
-resource "kubernetes_resource_quota" "memory" {
+resource "kubernetes_resource_quota" "runtime" {
   metadata {
-    name      = "memory-quota"
+    name      = "runtime-quota"
     namespace = kubernetes_namespace.this.metadata[0].name
   }
 
   spec {
     hard = {
-      "limits.memory" = var.memory_quota
+      "requests.cpu"    = var.cpu_request_quota
+      "requests.memory" = var.memory_request_quota
+      "limits.cpu"      = var.cpu_limit_quota
+      "limits.memory"   = var.memory_limit_quota
     }
   }
 }

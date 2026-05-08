@@ -14,7 +14,7 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Rationale:** These resources are prerequisites for the app rather than part of the app rollout itself. Keeping them in Terraform makes the dependency order explicit and lets Helm focus on the Deployment and Service.
 
-**Cost / risk accepted:** The Kubernetes Secret value is managed through Terraform, which means state handling matters. A production setup should use encrypted remote state and stronger secret management.
+**Cost / risk accepted:** The Kubernetes Secret value is managed through Terraform, which means state handling matters. ResourceQuota is intentionally small and sized for this challenge namespace. A production setup should use encrypted remote state, stronger secret management, and environment-specific quota sizing.
 
 ### Decision: Keep Helm responsible for the application release
 
@@ -108,11 +108,11 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Options considered:** Add no policy layer, which keeps the repo smaller but relies on manual review. Add many baseline policies, which is broader but harder to validate in this inherited repository. Add two focused Kyverno policies that match the hardening already implemented.
 
-**Chosen:** Add Kyverno policies to disallow `latest` image tags and require non-root execution, and apply them during `setup.sh` before the Helm release.
+**Chosen:** Add Kyverno policies to disallow `latest` image tags, require non-root execution, and require CPU and memory requests and limits. Apply them during `setup.sh` before the Helm release.
 
-**Rationale:** Kyverno policies are close to Kubernetes YAML and fit this repository better than introducing a larger policy framework. Applying them during setup makes the local deployment path match the intended admission baseline instead of leaving policy enforcement as a separate manual step.
+**Rationale:** Kyverno policies are close to Kubernetes YAML and fit this repository better than introducing a larger policy framework. Applying them during setup makes the local deployment path match the intended admission baseline instead of leaving policy enforcement as a separate manual step. The resource policy matches the chart's request and limit model and the namespace ResourceQuota.
 
-**Cost / risk accepted:** This is not a complete admission baseline. Additional policies for resources, read-only root filesystem, capabilities, and seccomp are deferred.
+**Cost / risk accepted:** This is not a complete admission baseline. Additional policies for read-only root filesystem, capabilities, and seccomp are deferred.
 
 ## Debugging And Validation Approach
 
@@ -150,7 +150,7 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Rationale:** Runtime validation proves that Docker, Terraform, Helm, Kubernetes probes, Secret injection, Service routing, and metrics work together.
 
-**Cost / risk accepted:** The runtime validation script covers the core post-deploy checks, but it is intentionally not a full test framework. It does not yet delete a pod and verify recovery timing.
+**Cost / risk accepted:** The runtime validation script covers the core post-deploy checks and pod recovery timing, but it is intentionally not a full test framework.
 
 ## Deployment Philosophy
 
@@ -176,7 +176,7 @@ Known limitations:
 - Kubernetes Secret handling is basic and does not use an external secret manager.
 - Terraform state protection is not configured in this repository.
 - CI does not yet run buildx multi-arch builds, image scanning, or Kyverno policy checks.
-- Policy-as-code is intentionally limited to two Kyverno policies.
+- Policy-as-code is intentionally limited to a small Kyverno baseline.
 - `system-checks.sh` covers core post-deploy validation and pod recovery timing, but it is not a full synthetic monitoring framework.
 - Metrics and an SLO statement are present, but there is no Prometheus deployment, alerting, dashboarding, or SLO enforcement.
 - Image tags are deterministic, but images are not published to a registry or pinned by digest.

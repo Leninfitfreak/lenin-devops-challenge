@@ -4,9 +4,27 @@ variable "namespace" {
   default     = "devops-challenge"
 }
 
-variable "memory_quota" {
+variable "cpu_request_quota" {
   type        = string
-  description = "Total memory quota for the namespace"
+  description = "Total CPU request quota for the namespace"
+  default     = "500m"
+}
+
+variable "memory_request_quota" {
+  type        = string
+  description = "Total memory request quota for the namespace"
+  default     = "256Mi"
+}
+
+variable "cpu_limit_quota" {
+  type        = string
+  description = "Total CPU limit quota for the namespace"
+  default     = "1"
+}
+
+variable "memory_limit_quota" {
+  type        = string
+  description = "Total memory limit quota for the namespace"
   default     = "512Mi"
 }
 

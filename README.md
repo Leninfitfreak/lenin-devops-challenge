@@ -36,7 +36,7 @@ IMAGE_TAG=1.0.0 ./setup.sh
 ## Deployment Flow
 
 - Docker builds `skybyte/app:<tag>` from the Flask application.
-- Terraform creates the `devops-challenge` namespace, memory quota, and `api-token` Secret.
+- Terraform creates the `devops-challenge` namespace, runtime ResourceQuota, and `api-token` Secret.
 - Kyverno policies are applied before the workload is installed.
 - Helm deploys the Kubernetes Deployment and Service.
 - Kind is used for local Kubernetes runtime validation and local image loading.
@@ -92,6 +92,7 @@ Kyverno policies live in `policies/` and enforce the runtime standards already u
 
 - images must not use the `latest` tag
 - workloads must run as non-root
+- containers must declare CPU and memory requests and limits
 
 Validate rendered manifests locally:
 
@@ -135,6 +136,7 @@ The Helm chart configures:
 - dropped Linux capabilities
 - `RuntimeDefault` seccomp profile
 - CPU and memory requests and limits
+- namespace ResourceQuota for aggregate CPU and memory requests and limits
 - readiness and liveness probes on `/healthz`
 - `terminationGracePeriodSeconds: 30`
 

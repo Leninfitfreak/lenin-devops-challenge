@@ -2,16 +2,16 @@ FROM python:3.9.18-slim-bullseye
 
 WORKDIR /app
 
-RUN useradd -m appuser
+RUN groupadd -g 1000 appuser && useradd -u 1000 -g 1000 -m appuser
 
 COPY app/requirements.txt .
 RUN pip install -r requirements.txt
 
 COPY app/ /app/
-RUN chown -R appuser:appuser /app
+RUN chown -R 1000:1000 /app
 
 EXPOSE 8080
 
-USER appuser
+USER 1000:1000
 
 CMD ["gunicorn", "--bind", "0.0.0.0:8080", "--workers", "1", "--timeout", "30", "--graceful-timeout", "25", "--worker-tmp-dir", "/dev/shm", "--access-logfile", "-", "--error-logfile", "-", "main:app"]

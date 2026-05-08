@@ -1,0 +1,46 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: require-resource-requests-limits
+spec:
+  validationFailureAction: Enforce
+  background: true
+  rules:
+    - name: pod-containers-must-declare-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Pod
+      validate:
+        message: Containers must declare CPU and memory requests and limits.
+        pattern:
+          spec:
+            containers:
+              - resources:
+                  requests:
+                    cpu: "?*"
+                    memory: "?*"
+                  limits:
+                    cpu: "?*"
+                    memory: "?*"
+    - name: deployment-containers-must-declare-resources
+      match:
+        any:
+          - resources:
+              kinds:
+                - Deployment
+      validate:
+        message: Containers must declare CPU and memory requests and limits.
+        pattern:
+          spec:
+            template:
+              spec:
+                containers:
+                  - resources:
+                      requests:
+                        cpu: "?*"
+                        memory: "?*"
+                      limits:
+                        cpu: "?*"
+                        memory: "?*"
