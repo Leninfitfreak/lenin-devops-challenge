@@ -52,6 +52,18 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Cost / risk accepted:** Git short SHA tags are not as strong as immutable image digests. A production pipeline should publish images to a registry and deploy by digest or by a controlled release tag.
 
+### Decision: Use a lightweight multi-stage Docker build
+
+**Context:** The image already used a slim pinned base and non-root runtime, but dependency installation still happened directly in the final image stage.
+
+**Options considered:** Keep the single-stage Dockerfile, which is simple but carries more build residue risk. Move to distroless or Alpine, which could reduce size further but changes the runtime base and increases compatibility risk. Use a small multi-stage build with the same slim Python base family.
+
+**Chosen:** Install Python dependencies in a builder stage and copy the installed runtime artifacts into the final slim image.
+
+**Rationale:** This improves image hygiene while preserving the current Python version, Debian slim base family, Gunicorn command, UID/GID behavior, and Kubernetes runtime assumptions.
+
+**Cost / risk accepted:** This is not a full supply-chain hardening solution. The image is still not pinned by digest and CI does not yet scan the built image.
+
 ## Operational Tradeoffs
 
 ### Decision: Add Prometheus-compatible metrics without adding a monitoring stack

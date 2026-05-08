@@ -130,6 +130,8 @@ Extended CI checks such as buildx multi-arch builds, image scanning, and Kyverno
 
 ## Runtime Hardening
 
+The Dockerfile uses a lightweight multi-stage build with the same slim Python base family for dependency installation and runtime.
+
 The Helm chart configures:
 
 - Gunicorn serving on container port `8080`

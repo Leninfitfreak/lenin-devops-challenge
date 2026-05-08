@@ -1,11 +1,17 @@
+FROM python:3.9.18-slim-bullseye AS builder
+
+WORKDIR /app
+
+COPY app/requirements.txt .
+RUN pip install --prefix=/install --no-cache-dir -r requirements.txt
+
 FROM python:3.9.18-slim-bullseye
 
 WORKDIR /app
 
 RUN groupadd -g 1000 appuser && useradd -u 1000 -g 1000 -m appuser
 
-COPY app/requirements.txt .
-RUN pip install -r requirements.txt
+COPY --from=builder /install /usr/local
 
 COPY app/ /app/
 RUN chown -R 1000:1000 /app
