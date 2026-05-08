@@ -12,6 +12,7 @@ This repository is an incremental hardening pass over an inherited deployment. I
 - Helm 3.x
 - Terraform 1.5+
 - Python 3.9+
+- Kyverno installed in the target cluster
 - Kyverno CLI for local policy validation
 
 ## Quick Start
@@ -24,7 +25,7 @@ export TF_VAR_api_token="local-dev-token"
 ./system-checks.sh
 ```
 
-`setup.sh` builds the Docker image, loads it into the `skybyte-devops` Kind cluster when that cluster exists, applies Terraform, and installs or upgrades the Helm release.
+`setup.sh` requires `TF_VAR_api_token`, builds the Docker image, loads it into the `skybyte-devops` Kind cluster when that cluster exists, applies Terraform, applies Kyverno policies, and installs or upgrades the Helm release.
 
 By default, the image tag is the current Git short SHA. Set `IMAGE_TAG` to deploy a specific tag:
 
@@ -36,6 +37,7 @@ IMAGE_TAG=1.0.0 ./setup.sh
 
 - Docker builds `skybyte/app:<tag>` from the Flask application.
 - Terraform creates the `devops-challenge` namespace, memory quota, and `api-token` Secret.
+- Kyverno policies are applied before the workload is installed.
 - Helm deploys the Kubernetes Deployment and Service.
 - Kind is used for local Kubernetes runtime validation and local image loading.
 - Kubernetes runs the app with Gunicorn, non-root settings, probes, resource limits, and Prometheus scrape annotations.
@@ -98,7 +100,7 @@ helm template skybyte-app helm/skybyte-app > rendered.yaml
 kyverno apply policies/ -r rendered.yaml
 ```
 
-Apply policies to a cluster with Kyverno installed:
+`setup.sh` applies policies automatically during deployment. Apply them manually when validating policy changes outside the full deployment flow:
 
 ```bash
 kubectl apply -f policies/

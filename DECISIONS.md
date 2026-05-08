@@ -108,9 +108,9 @@ This repository is production-oriented, but it is not a complete production plat
 
 **Options considered:** Add no policy layer, which keeps the repo smaller but relies on manual review. Add many baseline policies, which is broader but harder to validate in this inherited repository. Add two focused Kyverno policies that match the hardening already implemented.
 
-**Chosen:** Add Kyverno policies to disallow `latest` image tags and require non-root execution.
+**Chosen:** Add Kyverno policies to disallow `latest` image tags and require non-root execution, and apply them during `setup.sh` before the Helm release.
 
-**Rationale:** Kyverno policies are close to Kubernetes YAML and fit this repository better than introducing a larger policy framework. The policies are intentionally narrow and were validated against the Helm-rendered Deployment and a rejection example.
+**Rationale:** Kyverno policies are close to Kubernetes YAML and fit this repository better than introducing a larger policy framework. Applying them during setup makes the local deployment path match the intended admission baseline instead of leaving policy enforcement as a separate manual step.
 
 **Cost / risk accepted:** This is not a complete admission baseline. Additional policies for resources, read-only root filesystem, capabilities, and seccomp are deferred.
 
@@ -130,15 +130,15 @@ This repository is production-oriented, but it is not a complete production plat
 
 ### Decision: Keep `setup.sh` simple and linear
 
-**Context:** The deployment helper must be easy to inspect and useful for local validation.
+**Context:** The deployment helper must be easy to inspect and useful for local validation. It also needs to fail before Terraform if the required API token input is missing.
 
-**Options considered:** Add a full argument parser and environment management, which would make the script more flexible but heavier. Keep a small linear script with a few environment overrides.
+**Options considered:** Add a full argument parser and environment management, which would make the script more flexible but heavier. Keep a small linear script with a few environment overrides and explicit preflight checks.
 
-**Chosen:** Keep `setup.sh` linear: build image, load into Kind when present, apply Terraform, install or upgrade Helm.
+**Chosen:** Keep `setup.sh` linear: validate `TF_VAR_api_token`, build image, load into Kind when present, apply Terraform, apply Kyverno policies, install or upgrade Helm.
 
-**Rationale:** A small script is easier to debug during an interview or local validation run. `set -euo pipefail` ensures failures stop the deployment instead of continuing silently.
+**Rationale:** A small script is easier to debug during an interview or local validation run. `set -euo pipefail` ensures failures stop the deployment instead of continuing silently, and the token preflight turns a later Terraform failure into an immediate operator-readable error.
 
-**Cost / risk accepted:** `terraform apply -auto-approve` remains convenient for local challenge validation but is not the right default for production change control.
+**Cost / risk accepted:** `terraform apply -auto-approve` remains convenient for local challenge validation but is not the right default for production change control. The policy apply step assumes Kyverno is installed in the target cluster.
 
 ### Decision: Use runtime validation in Kind, not only static checks
 
@@ -157,7 +157,7 @@ This repository is production-oriented, but it is not a complete production plat
 The deployment flow is intentionally small:
 
 ```text
-Docker image -> Kind image load -> Terraform prerequisites -> Helm release -> Kubernetes runtime validation
+Docker image -> Kind image load -> Terraform prerequisites -> Kyverno policies -> Helm release -> Kubernetes runtime validation
 ```
 
 Terraform and Helm are separated by responsibility. Docker image tagging is deterministic by default. The chart keeps the app deployable with a stable fallback image tag, while `setup.sh` overrides it for local Git-based deployment.
@@ -177,8 +177,8 @@ Known limitations:
 - Terraform state protection is not configured in this repository.
 - CI does not yet run buildx multi-arch builds, image scanning, or Kyverno policy checks.
 - Policy-as-code is intentionally limited to two Kyverno policies.
-- `system-checks.sh` covers core post-deploy validation, but does not yet test pod deletion and recovery timing.
-- Metrics are exposed, but there is no formal SLO statement, Prometheus deployment, alerting, dashboarding, or SLO enforcement.
+- `system-checks.sh` covers core post-deploy validation and pod recovery timing, but it is not a full synthetic monitoring framework.
+- Metrics and an SLO statement are present, but there is no Prometheus deployment, alerting, dashboarding, or SLO enforcement.
 - Image tags are deterministic, but images are not published to a registry or pinned by digest.
 
 ## Consciously Deferred Work
