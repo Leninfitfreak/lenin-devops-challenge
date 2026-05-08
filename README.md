@@ -35,7 +35,8 @@ IMAGE_TAG=1.0.0 ./setup.sh
 
 ## Demo
 
-Asciinema walkthrough: https://asciinema.org/a/UL2kqQEPYkMWJqdz
+Asciinema walkthrough:
+[Watch the walkthrough](https://asciinema.org/a/UL2kqQEPYkMWJqdz)
 
 ## Deployment Flow
 
